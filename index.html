@@ -1,0 +1,1646 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta
+      name="viewport"
+      content="width=device-width,initial-scale=1,viewport-fit=cover"
+    />
+    <meta name="theme-color" content="#0a1016" />
+    <meta
+      name="description"
+      content="Breach Protocol: choose ten legendary heroes and storm the SS15 spaceship fortress. A complete offline tactical Canvas game."
+    />
+    <title>BREACH PROTOCOL — SS15 Assault</title>
+    <style>
+      :root {
+        color-scheme: dark;
+        --bg: #0a1016;
+        --panel: #101b24;
+        --line: #28353e;
+        --muted: #8e9ea8;
+        --white: #edf3f4;
+        --mint: #a9f4cc;
+        --red: #ff706e;
+        --gold: #ebc884;
+        font-family: Arial, Helvetica, sans-serif;
+      }
+      * {
+        box-sizing: border-box;
+        -webkit-tap-highlight-color: transparent;
+      }
+      html,
+      body {
+        margin: 0;
+        width: 100%;
+        height: 100%;
+        overflow: hidden;
+        background: #060b10;
+        color: var(--white);
+      }
+      body {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        background: radial-gradient(
+          ellipse at 50% 38%,
+          #1c2b34 0%,
+          #0c141c 45%,
+          #060b10 80%
+        );
+      }
+      body:before {
+        content: "";
+        position: fixed;
+        inset: 0;
+        pointer-events: none;
+        background-image:
+          linear-gradient(#99b6c704 1px, transparent 1px),
+          linear-gradient(90deg, #99b6c704 1px, transparent 1px);
+        background-size: 48px 48px;
+      }
+      button {
+        font: inherit;
+        color: inherit;
+        cursor: pointer;
+        border: 0;
+      }
+      button:focus-visible {
+        outline: 3px solid white;
+        outline-offset: -3px;
+      }
+      button:disabled {
+        cursor: not-allowed;
+      }
+      button,
+      canvas {
+        touch-action: manipulation;
+      }
+      #frame {
+        position: relative;
+        flex: none;
+        overflow: hidden;
+        box-shadow: 0 20px 120px #0009;
+        border: 1px solid #3b4e5c66;
+      }
+      #game {
+        position: absolute;
+        width: 450px;
+        height: 800px;
+        transform-origin: 0 0;
+        background: var(--bg);
+        overflow: hidden;
+      }
+      .screen {
+        position: absolute;
+        inset: 0;
+        display: flex;
+        flex-direction: column;
+      }
+      .hidden {
+        display: none !important;
+      }
+      .mono {
+        font-family: "Courier New", monospace;
+      }
+      .eyebrow {
+        font:
+          10px "Courier New",
+          monospace;
+        letter-spacing: 2px;
+        color: var(--muted);
+      }
+      .topbar {
+        height: 49px;
+        flex: none;
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        border-bottom: 1px solid var(--line);
+        padding: 0 20px;
+        background: #0d151c;
+      }
+      .brand {
+        display: flex;
+        align-items: center;
+        gap: 9px;
+        font-size: 11px;
+        font-weight: 800;
+        letter-spacing: 2px;
+      }
+      .brand-mark {
+        display: grid;
+        grid-template-columns: repeat(2, 5px);
+        gap: 2px;
+        transform: rotate(-12deg);
+      }
+      .brand-mark i {
+        width: 5px;
+        height: 10px;
+        background: var(--mint);
+      }
+      .brand-mark i:last-child {
+        opacity: 0.35;
+      }
+      .status {
+        display: flex;
+        align-items: center;
+        gap: 6px;
+        font:
+          9px "Courier New",
+          monospace;
+        letter-spacing: 1px;
+        color: var(--muted);
+      }
+      .dot {
+        width: 5px;
+        height: 5px;
+        border-radius: 50%;
+        background: var(--mint);
+        box-shadow: 0 0 9px #a9f4cc77;
+      }
+      .mission {
+        height: 167px;
+        position: relative;
+        flex: none;
+        overflow: hidden;
+        border-bottom: 1px solid var(--line);
+        background: linear-gradient(110deg, #182731, #0e1720);
+      }
+      #mission-art {
+        position: absolute;
+        inset: 0;
+        width: 450px;
+        height: 167px;
+      }
+      .mission-copy {
+        position: relative;
+        padding: 21px 20px;
+        pointer-events: none;
+      }
+      .mission-copy .eyebrow {
+        color: var(--mint);
+        font-size: 9px;
+        letter-spacing: 1.7px;
+      }
+      .mission h1 {
+        font-size: 40px;
+        letter-spacing: -1.8px;
+        line-height: 0.93;
+        margin: 10px 0 11px;
+        font-weight: 900;
+      }
+      .mission h1 span {
+        color: #8ea1ae;
+      }
+      .mission-meta {
+        display: flex;
+        align-items: center;
+        gap: 9px;
+        font:
+          9px "Courier New",
+          monospace;
+        color: #b2c1c9;
+      }
+      .tag {
+        border: 1px solid #ff706e55;
+        background: #ff706e12;
+        padding: 4px 6px;
+        color: #ff9790;
+        font:
+          8px "Courier New",
+          monospace;
+        letter-spacing: 1px;
+      }
+      .mission-coordinate {
+        position: absolute;
+        bottom: 12px;
+        right: 15px;
+        font:
+          8px "Courier New",
+          monospace;
+        letter-spacing: 1px;
+        color: #9caeb9;
+      }
+      .roster-heading {
+        padding: 18px 20px 12px;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+      }
+      .roster-heading h2 {
+        font-size: 21px;
+        letter-spacing: -0.6px;
+        margin: 0 0 5px;
+      }
+      .roster-heading p {
+        font-size: 10px;
+        color: var(--muted);
+        margin: 0;
+      }
+      .selection-counter {
+        display: flex;
+        align-items: baseline;
+        gap: 5px;
+        font:
+          12px "Courier New",
+          monospace;
+        color: var(--muted);
+      }
+      .selection-counter strong {
+        font-size: 28px;
+        color: var(--mint);
+        font-weight: normal;
+        letter-spacing: -2px;
+      }
+      .roster-tools {
+        margin: 0 20px 10px;
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+      }
+      .roster-label {
+        font:
+          9px "Courier New",
+          monospace;
+        letter-spacing: 1.5px;
+        color: #bbcad1;
+      }
+      .roster-label span {
+        color: #768b98;
+        margin-left: 6px;
+      }
+      .text-button {
+        background: none;
+        padding: 4px 0 4px 10px;
+        font:
+          9px "Courier New",
+          monospace;
+        letter-spacing: 0.8px;
+        color: var(--muted);
+      }
+      .text-button:hover {
+        color: var(--white);
+      }
+      #roster {
+        padding: 0 20px 12px;
+        display: grid;
+        grid-template-columns: repeat(5, minmax(0, 1fr));
+        gap: 8px;
+        overflow-y: auto;
+        align-content: start;
+        flex: 1;
+        min-height: 0;
+        scrollbar-width: thin;
+        scrollbar-color: #3b5660 transparent;
+        overscroll-behavior: contain;
+      }
+      .hero-card {
+        position: relative;
+        text-align: left;
+        min-width: 0;
+        background: #13202a;
+        border: 1px solid #2a3944;
+        padding: 0;
+        overflow: hidden;
+        height: 111px;
+        border-radius: 3px;
+        transition:
+          border-color 0.13s,
+          background 0.13s;
+      }
+      .hero-card:hover {
+        background: #1c2c35;
+        border-color: #617982;
+      }
+      .hero-card.selected {
+        border-color: var(--mint);
+        background: #1b342f;
+      }
+      .portrait-wrap {
+        position: relative;
+        height: 58px;
+        overflow: hidden;
+        background: linear-gradient(145deg, #263641, #101a24);
+      }
+      .portrait-wrap:after {
+        content: "";
+        position: absolute;
+        inset: 0;
+        background: linear-gradient(transparent 70%, #101b2488);
+        pointer-events: none;
+      }
+      .portrait-wrap canvas {
+        width: 100%;
+        height: 100%;
+        object-fit: cover;
+        image-rendering: pixelated;
+      }
+      .level-badge {
+        position: absolute;
+        top: 4px;
+        left: 4px;
+        font:
+          7px "Courier New",
+          monospace;
+        color: #d6e1e7;
+        z-index: 1;
+      }
+      .pick-badge {
+        position: absolute;
+        right: 4px;
+        top: 4px;
+        border: 1px solid #93adb16b;
+        width: 14px;
+        height: 14px;
+        font: 10px Arial;
+        display: grid;
+        place-items: center;
+        background: #0a161bbb;
+        z-index: 1;
+      }
+      .selected .pick-badge {
+        background: var(--mint);
+        color: #12211d;
+        border-color: var(--mint);
+      }
+      .hero-info {
+        padding: 5px 5px 4px;
+      }
+      .hero-name {
+        font-size: 8.5px;
+        font-weight: 700;
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        letter-spacing: -0.1px;
+      }
+      .hero-role {
+        font:
+          6px "Courier New",
+          monospace;
+        color: var(--muted);
+        text-transform: uppercase;
+        letter-spacing: 0.7px;
+        margin: 3px 0 5px;
+      }
+      .hero-stats {
+        display: flex;
+        justify-content: space-between;
+        gap: 2px;
+        font:
+          7px "Courier New",
+          monospace;
+        color: #b7c7cf;
+      }
+      .stat-hp {
+        color: #c5ded2;
+      }
+      .hero-stats em {
+        font-style: normal;
+        color: #7d939d;
+        font-size: 6px;
+      }
+      .selection-footer {
+        flex: none;
+        border-top: 1px solid var(--line);
+        padding: 10px 20px 15px;
+        background: #0d161d;
+      }
+      .intel {
+        min-height: 42px;
+        margin-bottom: 8px;
+        display: flex;
+        gap: 9px;
+        align-items: center;
+      }
+      .intel-icon {
+        width: 28px;
+        height: 28px;
+        flex: none;
+        border: 1px solid #3b514f;
+        display: grid;
+        place-items: center;
+        color: var(--mint);
+        font-size: 16px;
+      }
+      .intel-text {
+        min-width: 0;
+      }
+      .intel-title {
+        font-size: 9px;
+        color: #d5e4e5;
+        margin-bottom: 4px;
+      }
+      .intel-description {
+        font-size: 8px;
+        color: var(--muted);
+        line-height: 1.45;
+      }
+      .launch {
+        width: 100%;
+        height: 46px;
+        padding: 0 15px;
+        background: var(--mint);
+        color: #10251c;
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 10px;
+        font-size: 11px;
+        font-weight: 800;
+        letter-spacing: 1.4px;
+        border-radius: 2px;
+      }
+      .launch:disabled {
+        background: #253a36;
+        color: #94b0a4;
+      }
+      .launch-meta {
+        font:
+          8px "Courier New",
+          monospace;
+        letter-spacing: 0.6px;
+        opacity: 0.8;
+      }
+      .launch-arrow {
+        font-size: 21px;
+        font-weight: normal;
+      }
+      .footer-note {
+        margin-top: 8px;
+        text-align: center;
+        font:
+          7px "Courier New",
+          monospace;
+        color: #728894;
+        letter-spacing: 1px;
+      }
+      .battle-header {
+        height: 89px;
+        flex: none;
+        padding: 11px 16px 9px;
+        border-bottom: 1px solid var(--line);
+        background: #0d161d;
+      }
+      .battle-top {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        margin-bottom: 9px;
+      }
+      .battle-title {
+        font-size: 11px;
+        font-weight: 800;
+        letter-spacing: 1.1px;
+      }
+      .battle-title small {
+        color: var(--mint);
+        font:
+          9px "Courier New",
+          monospace;
+      }
+      .battle-actions {
+        display: flex;
+        gap: 5px;
+        align-items: center;
+      }
+      .icon-button {
+        height: 27px;
+        width: 30px;
+        display: grid;
+        place-items: center;
+        border: 1px solid #33434d;
+        background: #17232c;
+        border-radius: 2px;
+      }
+      .icon-button svg {
+        width: 15px;
+        height: 15px;
+        fill: none;
+        stroke: currentColor;
+        stroke-width: 1.6;
+        stroke-linecap: round;
+      }
+      .icon-button.active {
+        border-color: var(--mint);
+        color: var(--mint);
+      }
+      .clock {
+        font:
+          13px "Courier New",
+          monospace;
+        color: #dce9eb;
+        min-width: 49px;
+        margin-right: 7px;
+      }
+      .core-line {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        font:
+          8px "Courier New",
+          monospace;
+        color: var(--muted);
+        margin-bottom: 5px;
+      }
+      .core-line strong {
+        font-weight: normal;
+        color: #edf3f4;
+      }
+      .core-track {
+        height: 5px;
+        background: #28313b;
+        overflow: hidden;
+      }
+      .core-track div {
+        height: 100%;
+        width: 100%;
+        background: linear-gradient(90deg, #ff726e, #f3b5a0);
+        transition: width 0.12s;
+      }
+      .battle-stat-line {
+        display: flex;
+        justify-content: space-between;
+        font:
+          7px "Courier New",
+          monospace;
+        letter-spacing: 0.6px;
+        color: #a6b8c0;
+        margin-top: 6px;
+      }
+      #shield-text {
+        color: var(--mint);
+      }
+      .battlefield {
+        position: relative;
+        flex: 1;
+        min-height: 0;
+        display: flex;
+        justify-content: center;
+        background: #080e15;
+        background-image: repeating-linear-gradient(
+          0deg,
+          transparent 0 29px,
+          #40546518 30px
+        );
+      }
+      #field {
+        display: block;
+        height: 100%;
+        width: auto;
+        max-width: 100%;
+        aspect-ratio: 2/3;
+        touch-action: none;
+      }
+      .field-rail {
+        position: absolute;
+        top: 50%;
+        left: 8px;
+        writing-mode: vertical-rl;
+        font:
+          7px "Courier New",
+          monospace;
+        color: #536b79;
+        letter-spacing: 3px;
+        transform: translateY(-50%) rotate(180deg);
+        pointer-events: none;
+      }
+      .field-rail.right {
+        left: auto;
+        right: 8px;
+        transform: translateY(-50%);
+      }
+      #field-message {
+        position: absolute;
+        top: 8px;
+        left: 50%;
+        transform: translateX(-50%);
+        white-space: nowrap;
+        padding: 6px 10px;
+        border: 1px solid #a9f4cc40;
+        background: #0b181deb;
+        font:
+          8px "Courier New",
+          monospace;
+        color: var(--mint);
+        letter-spacing: 0.5px;
+        pointer-events: none;
+        max-width: 94%;
+        overflow: hidden;
+        text-overflow: ellipsis;
+      }
+      .target-info {
+        position: absolute;
+        bottom: 7px;
+        left: 50%;
+        transform: translateX(-50%);
+        background: #0a141dea;
+        border: 1px solid #405766;
+        padding: 5px 9px;
+        white-space: nowrap;
+        font:
+          8px "Courier New",
+          monospace;
+        pointer-events: none;
+      }
+      .battle-hud {
+        height: 154px;
+        flex: none;
+        background: #0d161d;
+        border-top: 1px solid var(--line);
+        padding: 7px 12px 8px;
+      }
+      .hud-heading {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        margin-bottom: 7px;
+        font:
+          8px "Courier New",
+          monospace;
+        letter-spacing: 1px;
+        color: var(--muted);
+      }
+      .hud-heading strong {
+        font-weight: normal;
+        color: var(--mint);
+      }
+      #squad {
+        display: grid;
+        grid-template-columns: repeat(5, minmax(0, 1fr));
+        gap: 5px;
+      }
+      .squad-card {
+        position: relative;
+        height: 58px;
+        background: #16232d;
+        border: 1px solid #2c414b;
+        overflow: hidden;
+        border-radius: 2px;
+      }
+      .squad-card.chosen {
+        border-color: var(--mint);
+      }
+      .squad-card.fallen {
+        opacity: 0.36;
+      }
+      .squad-select {
+        width: 100%;
+        height: 35px;
+        display: flex;
+        align-items: center;
+        gap: 4px;
+        padding: 2px 3px;
+        background: transparent;
+        text-align: left;
+      }
+      .squad-select img {
+        width: 28px;
+        height: 31px;
+        object-fit: cover;
+        image-rendering: pixelated;
+      }
+      .squad-copy {
+        min-width: 0;
+        flex: 1;
+      }
+      .squad-name {
+        font-size: 7px;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+      }
+      .squad-state {
+        font:
+          6px "Courier New",
+          monospace;
+        color: var(--muted);
+        margin-top: 3px;
+      }
+      .mini-hp {
+        height: 2px;
+        width: 100%;
+        background: #3a414a;
+        margin-top: 4px;
+      }
+      .mini-hp i {
+        display: block;
+        height: 100%;
+        background: var(--mint);
+      }
+      .skill-button {
+        height: 21px;
+        width: 100%;
+        border-top: 1px solid #38594d;
+        background: #233e33;
+        color: var(--mint);
+        font:
+          7px "Courier New",
+          monospace;
+        letter-spacing: 0.4px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        gap: 4px;
+        position: relative;
+      }
+      .skill-button:disabled {
+        color: #9bacb6;
+        background: #17242d;
+        border-color: #2b3b46;
+      }
+      .skill-button b {
+        font-size: 9px;
+      }
+      .skill-progress {
+        position: absolute;
+        inset: 0;
+        transform-origin: left;
+        background: #a9f4cc0c;
+        pointer-events: none;
+      }
+      .overlay {
+        position: absolute;
+        inset: 0;
+        background: #071018dd;
+        backdrop-filter: blur(7px);
+        z-index: 10;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        padding: 32px;
+      }
+      .modal {
+        width: 100%;
+        border: 1px solid #547367;
+        background: #101d24;
+        box-shadow: 0 15px 80px #0008;
+        padding: 28px 24px;
+        text-align: center;
+      }
+      .modal .eyebrow {
+        color: var(--mint);
+      }
+      .result-symbol {
+        font-size: 40px;
+        color: var(--mint);
+        margin: 15px 0;
+      }
+      .modal h2 {
+        font-size: 40px;
+        letter-spacing: -1.5px;
+        margin: 10px 0;
+      }
+      .modal p {
+        font-size: 11px;
+        color: #a4b6bf;
+        line-height: 1.7;
+        margin: 10px 0 22px;
+      }
+      .result-stats {
+        display: grid;
+        grid-template-columns: repeat(3, 1fr);
+        border-top: 1px solid var(--line);
+        border-bottom: 1px solid var(--line);
+        padding: 17px 0;
+        margin: 20px 0;
+      }
+      .result-stats strong {
+        font:
+          20px "Courier New",
+          monospace;
+        display: block;
+        color: var(--white);
+      }
+      .result-stats span {
+        display: block;
+        font:
+          7px "Courier New",
+          monospace;
+        letter-spacing: 0.8px;
+        color: var(--muted);
+        margin-top: 7px;
+      }
+      .secondary {
+        width: 100%;
+        height: 40px;
+        background: transparent;
+        border: 1px solid #3b505a;
+        font-size: 10px;
+        letter-spacing: 1px;
+        margin-top: 10px;
+      }
+      .desktop-caption {
+        position: fixed;
+        bottom: 16px;
+        color: #586b76;
+        font:
+          9px "Courier New",
+          monospace;
+        letter-spacing: 3px;
+        pointer-events: none;
+      }
+      #announcer {
+        position: absolute;
+        width: 1px;
+        height: 1px;
+        overflow: hidden;
+        clip-path: inset(50%);
+      }
+      @media (max-height: 860px), (max-width: 600px) {
+        .desktop-caption {
+          display: none;
+        }
+      }
+      @media (prefers-reduced-motion: reduce) {
+        * {
+          transition: none !important;
+        }
+      }
+    </style>
+  </head>
+  <body>
+    <div id="frame">
+      <main id="game" aria-label="Breach Protocol tactical battle game">
+        <section id="selection" class="screen" aria-label="Hero selection">
+          <header class="topbar">
+            <div class="brand">
+              <span class="brand-mark" aria-hidden="true"
+                ><i></i><i></i><i></i><i></i></span
+              >BREACH PROTOCOL
+            </div>
+            <span class="status"><i class="dot"></i>OFFLINE READY</span>
+          </header>
+          <div class="mission">
+            <canvas
+              id="mission-art"
+              width="900"
+              height="334"
+              aria-hidden="true"
+            ></canvas>
+            <div class="mission-copy">
+              <div class="eyebrow">OPERATION 001 / SPACESHIP ASSAULT</div>
+              <h1>ONE BASE.<br /><span>TEN LEGENDS.</span></h1>
+              <div class="mission-meta">
+                <span class="tag">SS15 FORTRESS</span
+                ><span>MAX LEVEL · 20 DEFENSES</span>
+              </div>
+            </div>
+            <div class="mission-coordinate">SECTOR 07 / HOSTILE</div>
+          </div>
+          <div class="roster-heading">
+            <div>
+              <h2>Assemble your strike team.</h2>
+              <p>Choose exactly 10 heroes. Make every slot count.</p>
+            </div>
+            <div class="selection-counter">
+              <strong id="selected-count">00</strong><span>/ 10</span>
+            </div>
+          </div>
+          <div class="roster-tools">
+            <div class="roster-label">
+              AVAILABLE HEROES <span>25 / LVL 100</span>
+            </div>
+            <button id="clear-selection" class="text-button">
+              RESET SELECTION ↺
+            </button>
+          </div>
+          <div id="roster" aria-label="25 available heroes"></div>
+          <footer class="selection-footer">
+            <div class="intel">
+              <div class="intel-icon" aria-hidden="true">⌖</div>
+              <div class="intel-text">
+                <div class="intel-title" id="intel-title">
+                  A fortress built to hold. A team built to break it.
+                </div>
+                <div class="intel-description" id="intel-description">
+                  Select a hero to inspect their skill and passive. Deploy on
+                  the outer edge, then tap a skill to turn the tide.
+                </div>
+              </div>
+            </div>
+            <button class="launch" id="launch" disabled>
+              <span id="launch-label">SELECT 10 HEROES</span
+              ><span class="launch-meta" id="launch-meta">0 / 10 READY</span
+              ><span class="launch-arrow" aria-hidden="true">↗</span>
+            </button>
+            <div class="footer-note">
+              ONE BATTLEFIELD. NO SECOND CHANCES. ALL LEVEL 100.
+            </div>
+          </footer>
+        </section>
+        <section
+          id="battle-screen"
+          class="screen hidden"
+          aria-label="SS15 battlefield"
+        >
+          <header class="battle-header">
+            <div class="battle-top">
+              <div class="battle-title">
+                SS15 <small>/ BREACH IN PROGRESS</small>
+              </div>
+              <div class="battle-actions">
+                <span id="clock" class="clock">00:00</span
+                ><button
+                  class="icon-button"
+                  id="ranges"
+                  aria-label="Toggle defense attack ranges"
+                  aria-pressed="false"
+                >
+                  <svg viewBox="0 0 24 24">
+                    <circle cx="12" cy="12" r="7" />
+                    <path d="M12 1v6m0 10v6M1 12h6m10 0h6" />
+                  </svg></button
+                ><button
+                  class="icon-button"
+                  id="pause"
+                  aria-label="Pause battle"
+                >
+                  <svg viewBox="0 0 24 24">
+                    <path d="M8 5v14M16 5v14" />
+                  </svg></button
+                ><button
+                  class="icon-button"
+                  id="restart"
+                  aria-label="Restart battle"
+                >
+                  <svg viewBox="0 0 24 24">
+                    <path d="M4 10a8 8 0 1 1 1 8M4 4v6h6" />
+                  </svg>
+                </button>
+              </div>
+            </div>
+            <div class="core-line">
+              <span>SPACESHIP CORE <strong>LVL 100</strong></span
+              ><strong id="core-value">15,000 / 15,000</strong>
+            </div>
+            <div class="core-track"><div id="core-bar"></div></div>
+            <div class="battle-stat-line">
+              <span id="remaining">HEROES 10 / 10</span
+              ><span id="destroyed">DESTROYED 00 / 25</span
+              ><span id="shield-text">SHIELD ONLINE</span>
+            </div>
+          </header>
+          <div class="battlefield">
+            <span class="field-rail">SS15 // RESTRICTED AIRSPACE</span
+            ><canvas
+              id="field"
+              width="800"
+              height="1200"
+              role="img"
+              tabindex="0"
+              aria-label="Battlefield. Select a hero, then tap a glowing outer edge to deploy. Tap a structure to focus attacks. Keyboard: arrow keys move a deployment cursor; Enter deploys."
+            ></canvas
+            ><span class="field-rail right">800 × 1200 // TACTICAL VIEW</span>
+            <div id="field-message">
+              SELECT A HERO · TAP THE GLOWING OUTER EDGE
+            </div>
+            <div id="target-info" class="target-info hidden"></div>
+          </div>
+          <footer class="battle-hud">
+            <div class="hud-heading">
+              <span
+                >STRIKE TEAM
+                <strong id="deployed-count">0 / 10 DEPLOYED</strong></span
+              ><span>TAP HERO → DEPLOY · ✦ SKILL</span>
+            </div>
+            <div id="squad"></div>
+          </footer>
+        </section>
+        <div
+          id="overlay"
+          class="overlay hidden"
+          role="dialog"
+          aria-modal="true"
+          aria-labelledby="modal-title"
+        >
+          <div class="modal">
+            <div class="eyebrow" id="modal-eyebrow">OPERATION 001</div>
+            <div class="result-symbol" id="modal-symbol" aria-hidden="true">
+              ⌖
+            </div>
+            <h2 id="modal-title">PAUSED</h2>
+            <p id="modal-copy">Take a breath. Plan your next move.</p>
+            <div id="result-stats" class="result-stats hidden"></div>
+            <button id="modal-primary" class="launch">
+              <span>RESUME BATTLE</span
+              ><span aria-hidden="true">↗</span></button
+            ><button id="modal-secondary" class="secondary">
+              RETURN TO ROSTER
+            </button>
+          </div>
+        </div>
+        <div id="announcer" aria-live="polite"></div>
+      </main>
+    </div>
+    <div class="desktop-caption">
+      A CROSSOVER TACTICAL EXPERIENCE / BUILT FOR THE BREACH
+    </div>
+    <script>
+      'use strict';
+      const $ = id => document.getElementById(id);
+      const TAU = Math.PI * 2;
+      const clamp = (v, min, max) => Math.max(min, Math.min(max, v));
+      const distance = (a, b) => Math.hypot(a.x - b.x, a.y - b.y);
+      const number = n => Math.round(n).toLocaleString('en-US');
+      const clock = s => `${String(Math.floor(s / 60)).padStart(2, '0')}:${String(Math.floor(s % 60)).padStart(2, '0')}`;
+      const HEROES = [
+        ['Spiderman','SPIDERMAN','Infiltrator',4500,850,115,110,1.3,.12,18,'Web-Sling Stun','Immobilize the nearest turret for 4s.','Spider sense: 22% dodge chance.','#ce5b58','#35557a','mask'],
+        ['Superman','SUPERMAN','Vanguard',12000,2200,92,120,2.7,.32,27,'Heat Vision','Sweep a 360° arc for 4,000 true damage.','Solar cells: regenerate 35 HP/s.','#47729d','#b74c51','curl'],
+        ['Madara Uchiha','MADARA','Siege mage',7500,2800,68,200,3.1,.18,30,'Shattered Heaven','Drop two 4,800-damage meteors on defense zones.','Fire release: attacks splash for 20% damage.','#a64a52','#282739','long'],
+        ['Monkey D. Luffy','LUFFY','Brawler',8000,2100,100,95,2.4,.22,25,'Gear 5 Bajrang Gun','A gigantic fist hits nearby structures for 6,200.','Rubber body: take 50% less cannon damage.','#c85b4f','#e2bd79','hat'],
+        ['Naruto Uzumaki','NARUTO','Striker',7000,2000,108,160,2.3,.18,22,'Sage Art Rasenshuriken','A tracking blade deals 5,400 damage plus splash.','Shadow clone: every fourth strike hits twice.','#da9b4c','#edcd76','band'],
+        ['Goku','GOKU','Power striker',9000,2500,100,150,2.8,.23,32,'Spirit Bomb','Charge for 3s, then deal 9,000 area damage.','Saiyan resolve: attack grows up to 30% in combat.','#d48042','#24212d','spikes'],
+        ['Saitama','SAITAMA','Finisher',15000,5000,72,70,4.2,.35,38,'One Punch','Instantly destroy the focused building. Core interlock applies.','Limit breaker: basic attacks ignore energy shields.','#dbb857','#eee8d7','bald'],
+        ['Thor','THOR','Stormbringer',9500,2300,82,115,2.7,.26,26,'Bifrost Lightning Strike','Chain 3,800 lightning damage through up to 6 towers.','Storm charge: strikes arc for 25% damage.','#849eaa','#c15c55','helmet'],
+        ['Iron Man','IRON MAN','Artillery',5000,1900,88,245,2.3,.2,24,'Unibeam Barrage','Fire three tracking 2,200-damage blasts at machine guns.','Targeting system: 30% bonus against machine guns.','#b5534b','#e1bd74','iron'],
+        ['Batman','BATMAN','Saboteur',4000,1200,110,115,1.6,.22,25,'EMP Stealth Drop','Disable nearby defenses and enter stealth for 6s.','Ambush: 6s deployment stealth; +25% vs disabled towers.','#424b58','#242b39','bat'],
+        ['Ichigo Kurosaki','ICHIGO','Blade striker',7200,2400,104,100,2.5,.18,23,'Getsuga Tensho','A piercing wave deals 5,800 damage along its path.','Soul pressure: basic slashes splash for 25%.','#343742','#dd985c','spikes'],
+        ['Darth Vader','VADER','Controller',8500,2000,65,155,2.6,.33,26,'Force Crush','Remove 50% of the focused building’s current HP.','Force armor: take 20% less damage from close attackers.','#41434d','#181e29','vader'],
+        ['Deadpool','DEADPOOL','Regenerator',6000,1700,103,145,2,.16,24,'Regenerative Rampage','Restore 50% max HP; double attack speed for 8s.','Healing factor: regenerate 80 HP/s.','#ac4851','#292d3c','mask'],
+        ['Tanjiro Kamado','TANJIRO','Laser hunter',5500,1800,114,90,2,.16,23,'Sun Breathing Dragon Dance','Dash-slash up to 3 laser towers for 5,000 each.','Hinokami: +40% damage against laser towers.','#4e8e75','#693d43','scar'],
+        ['Satoru Gojo','GOJO','Disruptor',10000,3000,88,200,3.2,.25,36,'Infinite Void','Disable all active defenses for 5s.','Infinity: negate one incoming hit every 8s.','#3e4565','#e0e9ef','blind'],
+        ['Thanos','THANOS','Titan',14000,2600,58,95,3.2,.38,100,'Infinity Snap','Destroy half the active towers. 22s charge; once per battle.','Titan endurance: 40% less damage below 40% HP.','#a88a52','#9c7bb5','thanos'],
+        ['Wolverine','WOLVERINE','Berserker',8000,1900,102,70,2.1,.24,24,'Berserker Frenzy','Become laser-immune and attack 2× faster for 9s.','Adamantium healing: regenerate 110 HP/s.','#ceae50','#3e6085','wolverine'],
+        ['Eren Yeager','EREN','Siege titan',11000,2400,76,85,2.9,.29,30,'Founding Titan Transform','Grow for 12s: +80% attack, +45 range, cannon smash.','Siege instinct: +35% damage against cannons.','#647d68','#473b32','long'],
+        ['Flash','FLASH','Speedster',4200,1500,175,85,1.7,.1,20,'Speed Force Strike','Blitz up to 5 buildings for 3,500 damage each.','Speed force: 35% dodge chance.','#b84c4e','#e4bd67','flash'],
+        ['Levi Ackerman','LEVI','Assassin',5000,2300,138,80,2.4,.15,22,'Whirlwind Blade Rush','Rush up to 4 machine-gun zones for 4,800 damage.','Precision cut: +40% damage against machine guns.','#6c8373','#2b303c','part'],
+        ['Sukuna','SUKUNA','Area reaper',9000,2900,92,130,3,.24,30,'Malevolent Shrine','Create a 260-radius shrine dealing 850 damage/s for 7s.','Blood pact: heal for 20% of basic-attack damage.','#675064','#cf9ba6','tattoo'],
+        ['Hulk','HULK','Wall breaker',13000,2700,70,75,3.2,.35,26,'Hulk Smash','Deal 9,000 wall damage; 5,200 area damage and 3s stun.','Rage: +50% attack when below half HP.','#567f59','#637247','hulk'],
+        ['Wonder Woman','WONDER WOMAN','Protector',8500,2100,98,110,2.5,.3,24,'Godkiller Shield Bash','Reflect incoming missiles at their batteries for 10s.','Bracelets: 25% chance to block a missile.','#b85b59','#d6b368','tiara'],
+        ['Asta','ASTA','Shield breaker',6500,2000,116,90,2.3,.2,28,'Anti-Magic Slash','Disable all energy shields and the wall ring for 8s.','Anti-magic: ignore shields; take 25% less laser damage.','#4c5364','#c6d0ce','band'],
+        ['Ken Kaneki','KANEKI','Laser hunter',7000,2100,118,130,2.4,.21,24,'Kagune Centipede','Tentacles hit up to 4 nearby lasers for 4,500 each.','Ghoul: +45% vs lasers; regenerate 60 HP/s.','#484555','#e1e0dc','ghoul']
+      ].map((a, id) => ({id, name:a[0], short:a[1], role:a[2], maxHp:a[3], attack:a[4], speed:a[5], range:a[6], attackCd:a[7], defense:a[8], skillCooldown:a[9], skill:a[10], description:a[11], passive:a[12], color:a[13], accent:a[14], look:a[15], level:100}));
+      const DEFENSES = {
+        cannon:{name:'Heavy Cannon',hp:4000,damage:350,rate:2.2,range:270,color:'#eac18b',radius:30},
+        laser:{name:'Laser Tower',hp:3500,damage:120,rate:0,range:255,color:'#ed7c91',radius:25},
+        gun:{name:'Machine Gun',hp:3000,damage:40,rate:.16,range:220,color:'#a9d8ce',radius:25},
+        tesla:{name:'Tesla Coil',hp:2500,damage:600,rate:3.6,range:225,color:'#b9a2ec',radius:25},
+        missile:{name:'Missile Battery',hp:4500,damage:800,rate:4.5,range:340,color:'#dfab78',radius:32},
+        reactor:{name:'Power Reactor',hp:5500,damage:0,rate:0,range:0,color:'#88dace',radius:28},
+        core:{name:'SS15 Spaceship Core',hp:15000,damage:0,rate:0,range:0,color:'#ec9d8e',radius:47}
+      };
+      const selected = new Set();
+      const portraits = [];
+      const portraitURLs = [];
+      let state = null, mode = 'selection', showRanges = true, lastFrame = 0, uiAccumulator = 0;
+      let selectedUnit = 0, focusTarget = null, modalAction = null, previousFocus = null;
+      let keyboardCursor = {x:400,y:1170,visible:false};
+      const canvas = $('field'), ctx = canvas.getContext('2d', {alpha:false});
+      const terrain = document.createElement('canvas'); terrain.width=800; terrain.height=1200;
+      const terrainCtx = terrain.getContext('2d', {alpha:false});
+      const reducedMotion = matchMedia('(prefers-reduced-motion: reduce)').matches;
+
+      function resize() {
+        const scale = Math.min((window.innerWidth - 2) / 450, (window.innerHeight - 2) / 800);
+        $('frame').style.width = `${450 * scale}px`;
+        $('frame').style.height = `${800 * scale}px`;
+        $('game').style.transform = `scale(${scale})`;
+      }
+      window.addEventListener('resize', resize); resize();
+      function polygon(c, points, fill, stroke) {
+        c.beginPath(); points.forEach(([x,y],i) => i ? c.lineTo(x,y) : c.moveTo(x,y)); c.closePath();
+        if(fill) {c.fillStyle=fill;c.fill();} if(stroke) {c.strokeStyle=stroke;c.stroke();}
+      }
+      function circle(c,x,y,r,fill,stroke) {
+        c.beginPath();c.arc(x,y,r,0,TAU);if(fill){c.fillStyle=fill;c.fill();}if(stroke){c.strokeStyle=stroke;c.stroke();}
+      }
+      function line(c,x,y,xx,yy,color,width=1) {c.strokeStyle=color;c.lineWidth=width;c.beginPath();c.moveTo(x,y);c.lineTo(xx,yy);c.stroke();}
+      function label(c,text,x,y,color='#91a6b4',size=12,align='center') {c.font=`${size}px "Courier New", monospace`;c.textAlign=align;c.fillStyle=color;c.fillText(text,x,y);}
+
+      function makePortrait(h) {
+        const p=document.createElement('canvas');p.width=72;p.height=64;const c=p.getContext('2d');
+        const bg=c.createLinearGradient(0,0,72,64);bg.addColorStop(0,h.color+'80');bg.addColorStop(1,'#111c26');c.fillStyle=bg;c.fillRect(0,0,72,64);
+        c.fillStyle='#ffffff08';for(let x=0;x<72;x+=6)c.fillRect(x,0,1,64);
+        circle(c,38,30,24,null,h.accent+'35');
+        const skin=h.look==='hulk'?'#8ba97a':h.look==='thanos'?'#ad8ac0':'#d7ae90';
+        const r=(x,y,w,hh,col)=>{c.fillStyle=col;c.fillRect(x,y,w,hh);};
+        polygon(c,[[12,64],[17,48],[29,43],[45,43],[59,51],[66,64]],h.color);
+        polygon(c,[[17,50],[25,47],[24,64],[13,64]],h.accent+'bb');
+        r(30,37,13,12,skin);r(25,18,23,23,skin);r(28,39,17,5,skin);
+        r(25,18,4,20,'#00000020');r(45,18,3,20,'#ffffff16');
+        if(['mask','flash','bat','iron','vader','wolverine'].includes(h.look)) {
+          r(24,15,25,27,h.look==='iron'?h.accent:h.color);r(27,40,19,4,h.color);
+          if(h.look==='mask') {
+            polygon(c,[[25,22],[35,26],[32,33],[26,31]],'#202a34');polygon(c,[[48,22],[38,26],[40,33],[47,31]],'#202a34');
+            polygon(c,[[27,25],[33,27],[31,30],[27,29]],'#e7ece7');polygon(c,[[45,25],[40,27],[41,30],[45,29]],'#e7ece7');
+            if(h.id===0){for(let y=19;y<42;y+=7)line(c,25,y,48,y+3,'#733c44');line(c,36,16,36,42,'#733c44');}
+          } else if(h.look==='iron') {
+            polygon(c,[[25,17],[30,16],[31,23],[42,23],[43,16],[48,17],[46,36],[41,42],[32,42],[26,35]],h.accent);
+            r(27,26,7,3,'#b4f8ee');r(39,26,7,3,'#b4f8ee');r(32,38,9,2,'#684c38');circle(c,36,55,4,'#b4f8ee');
+          } else if(h.look==='bat'||h.look==='wolverine') {
+            polygon(c,[[24,27],[22,5],[32,17],[42,17],[51,5],[49,28]],h.look==='bat'?'#303c4a':h.accent);
+            r(29,34,14,9,skin);r(27,27,7,2,'#f0f2e8');r(39,27,7,2,'#f0f2e8');polygon(c,[[28,54],[33,51],[37,54],[43,51],[46,54],[37,59]],'#141d29');
+          } else if(h.look==='vader') {
+            polygon(c,[[23,16],[30,9],[43,9],[49,17],[54,43],[20,43]],'#202a33');r(26,23,8,4,'#718089');r(39,23,8,4,'#718089');polygon(c,[[36,29],[29,39],[44,39]],'#718089');r(34,32,2,7,'#202a33');r(39,34,2,5,'#202a33');r(30,51,14,9,'#17212b');r(32,53,3,2,'#e87c75');
+          } else {r(29,33,14,9,skin);r(27,26,7,3,'#edf4df');r(39,26,7,3,'#edf4df');polygon(c,[[22,23],[17,26],[22,30],[19,36],[27,28]],h.accent);polygon(c,[[51,23],[56,26],[51,30],[54,36],[46,28]],h.accent);}
+        } else {
+          r(29,28,5,2,'#29313a');r(40,28,5,2,'#29313a');r(34,37,7,1,'#865955');
+          if(!['bald','thanos','helmet'].includes(h.look)) {
+            const hair=['spikes','band','blind','ghoul','tattoo'].includes(h.look)?h.accent:['curl','long','scar','hat','part','tiara','hulk'].includes(h.look)?'#242631':h.accent;
+            polygon(c,[[22,23],[21,13],[27,15],[25,6],[33,11],[35,3],[40,11],[47,7],[47,15],[53,13],[49,25],[44,20],[28,20]],hair);
+            if(h.look==='long'||h.look==='tiara'){r(20,18,6,30,hair);r(47,19,6,29,hair);}
+            if(h.look==='part'){polygon(c,[[24,13],[39,9],[50,15],[44,28],[39,19],[27,24]],hair);}
+            if(h.look==='curl')r(36,20,4,5,hair);
+          }
+          if(h.look==='hat'){r(16,16,41,5,h.accent);r(25,7,24,10,h.accent);r(25,13,24,4,'#a24b42');}
+          if(h.look==='band'){r(24,20,25,6,'#3c4554');r(30,21,14,4,'#aeb8bf');r(35,22,4,2,'#56616c');}
+          if(h.look==='blind')r(24,25,25,8,'#242a39');
+          if(h.look==='ghoul'){r(25,33,23,10,'#252b33');r(27,37,18,2,'#e5e7d7');r(40,27,5,3,'#da645e');}
+          if(h.look==='scar'){r(42,19,3,6,'#995754');r(47,35,3,8,'#ddd9c4');r(24,35,3,8,'#ddd9c4');}
+          if(h.look==='tattoo'){r(28,32,6,1,'#4e3548');r(40,32,6,1,'#4e3548');r(34,22,1,4,'#4e3548');r(38,22,1,4,'#4e3548');}
+          if(h.look==='helmet'){polygon(c,[[23,23],[24,13],[31,9],[45,10],[51,22]],'#aebdc1');polygon(c,[[25,18],[16,12],[19,25],[25,28]],'#c9d7d9');polygon(c,[[48,18],[57,12],[55,25],[48,28]],'#c9d7d9');r(28,36,18,8,'#be9c6c');r(29,35,15,3,skin);}
+          if(h.look==='thanos'){r(25,13,24,8,h.color);r(25,16,5,11,h.color);r(44,16,5,11,h.color);for(let x=31;x<45;x+=3)r(x,36,1,7,'#775786');}
+          if(h.look==='tiara'){r(25,21,24,3,h.accent);polygon(c,[[32,23],[36,28],[41,23]],h.accent);}
+          if(h.look==='bald'){r(27,14,20,9,skin);r(31,11,12,5,skin);polygon(c,[[22,46],[30,46],[29,64],[20,64]],'#e8e1d5');polygon(c,[[44,46],[53,47],[57,64],[46,64]],'#e8e1d5');}
+        }
+        if(h.id===1){polygon(c,[[27,51],[47,51],[37,62]],'#d9af60');label(c,'S',37,59,'#a34748',9);}
+        if(h.id===4){r(31,50,13,14,'#2c3547');line(c,27,31,32,32,'#98674b');line(c,41,32,46,31,'#98674b');}
+        if(h.id===13){for(let x=16;x<61;x+=11)for(let y=49;y<64;y+=9)if((x+y)%2)r(x,y,8,7,'#243b38');}
+        if(h.id===21){r(16,50,12,14,skin);r(49,50,13,14,skin);}
+        r(0,63,72,1,h.color); portraits.push(p);portraitURLs.push(p.toDataURL('image/png'));
+      }
+      HEROES.forEach(makePortrait);
+      function renderRoster() {
+        $('roster').innerHTML=HEROES.map(h=>`<button class="hero-card" data-hero="${h.id}" aria-pressed="false" aria-label="${h.name}, Level 100, ${number(h.maxHp)} HP, ${number(h.attack)} attack. ${h.skill}. ${h.description}"><div class="portrait-wrap"><canvas width="72" height="64" aria-hidden="true"></canvas><span class="level-badge">LV.100</span><span class="pick-badge">+</span></div><div class="hero-info"><div class="hero-name">${h.name}</div><div class="hero-role">${h.role}</div><div class="hero-stats"><span class="stat-hp"><em>HP</em> ${(h.maxHp/1000).toFixed(1)}k</span><span><em>ATK</em> ${(h.attack/1000).toFixed(2).replace(/0$/,'')}k</span></div></div></button>`).join('');
+        $('roster').querySelectorAll('canvas').forEach((c,i)=>c.getContext('2d').drawImage(portraits[i],0,0));
+        $('roster').addEventListener('click',event=>{
+          const card=event.target.closest('[data-hero]');if(!card)return;
+          const id=Number(card.dataset.hero),h=HEROES[id];
+          $('intel-title').textContent=`${h.name} / ${h.skill}`;
+          $('intel-description').textContent=`${h.description} ${h.passive} DEF ${Math.round(h.defense*100)}% · SPD ${h.speed} · RNG ${h.range} · ATK ${h.attackCd}s · SKILL ${h.skillCooldown}s`;
+          if(selected.has(id))selected.delete(id);else if(selected.size<10)selected.add(id);else {announce('Your team is full. Deselect a hero to make room.');return;}
+          updateSelection();
+        });
+      }
+      function updateSelection(){
+        document.querySelectorAll('[data-hero]').forEach(card=>{const picked=selected.has(Number(card.dataset.hero));card.classList.toggle('selected',picked);card.setAttribute('aria-pressed',picked);card.querySelector('.pick-badge').textContent=picked?'✓':'+';});
+        $('selected-count').textContent=String(selected.size).padStart(2,'0');$('launch').disabled=selected.size!==10;
+        $('launch-label').textContent=selected.size===10?'INITIATE THE BREACH':'SELECT 10 HEROES';$('launch-meta').textContent=`${selected.size} / 10 READY`;
+      }
+      function announce(text){$('announcer').textContent=text;}
+      function message(text,duration=3){if(state){state.message=text;state.messageUntil=state.time+duration;}$('field-message').textContent=text;announce(text);}
+      $('clear-selection').onclick=()=>{selected.clear();updateSelection();};
+      $('launch').onclick=()=>{if(selected.size===10)startBattle();};
+      renderRoster();
+
+      function makeBase(){
+        const positions={cannon:[[160,205],[635,205],[160,1010],[635,1010]],missile:[[170,385],[630,385],[160,850],[640,850]],laser:[[305,385],[495,385],[300,865],[500,865]],gun:[[165,575],[635,575],[300,1020],[500,1020]],tesla:[[300,235],[500,235],[305,570],[495,570]],reactor:[[190,715],[610,715],[315,710],[485,710]],core:[[350,120]]};
+        let id=0;return Object.entries(positions).flatMap(([type,coords])=>coords.map(([x,y])=>({...DEFENSES[type],id:id++,type,x,y,hp:DEFENSES[type].hp,maxHp:DEFENSES[type].hp,cooldown:.5+(id%4)*.3,disabledUntil:0,target:null,angle:Math.PI/2,flash:0,beam:false,damageText:0,damageTextAt:0})));
+      }
+      function startBattle(){
+        if(selected.size!==10)return;
+        state={time:0,started:false,buildings:makeBase(),units:[...selected].map(id=>({...HEROES[id],hp:HEROES[id].maxHp,x:400,y:1170,deployed:false,dead:false,cooldown:0,skillCd:id===15?22:0,used:false,attackCount:0,buffUntil:0,stealthUntil:0,infinityAt:0,chargeUntil:0,reflectUntil:0,spawnTime:0,damageText:0,damageTextAt:0})),wall:{hp:32000,maxHp:32000},shieldOffUntil:0,projectiles:[],effects:[],particles:[],floats:[],zones:[],pending:[],kills:0,skills:0,totalDamage:0,message:'SELECT A HERO · TAP THE GLOWING OUTER EDGE',messageUntil:0};
+        selectedUnit=0;focusTarget=null;mode='battle';uiAccumulator=0;
+        $('selection').classList.add('hidden');$('battle-screen').classList.remove('hidden');closeModal();
+        buildTerrain();renderSquad();updateHUD();renderBattle();$('field').focus({preventScroll:true});
+      }
+      function activeDefenses(){return state.buildings.filter(b=>b.hp>0&&DEFENSES[b.type].range>0);}
+      function coreLocked(){return activeDefenses().length>0;}
+      function shieldOn(){return state.shieldOffUntil<=state.time&&state.buildings.some(b=>b.type==='reactor'&&b.hp>0);}
+      function shieldMultiplier(){
+        if(!shieldOn())return 1;
+        const reactors=state.buildings.filter(b=>b.type==='reactor'&&b.hp>0).length;
+        return [1,.75,.55,.4,.25][reactors];
+      }
+      function wallOn(){return state.wall.hp>0&&state.shieldOffUntil<=state.time;}
+      function inBase(u){return u.x>94&&u.x<706&&u.y>84&&u.y<1116;}
+      function wallPoint(u){
+        const points=[{x:85,y:clamp(u.y,75,1125)},{x:715,y:clamp(u.y,75,1125)},{x:clamp(u.x,85,715),y:75},{x:clamp(u.x,85,715),y:1125}];
+        return points.sort((a,b)=>distance(u,a)-distance(u,b))[0];
+      }
+      function nearest(origin,list){return [...list].sort((a,b)=>distance(origin,a)-distance(origin,b));}
+      function legalBuildings(){return state.buildings.filter(b=>b.hp>0&&(b.type!=='core'||!coreLocked()));}
+      function getFocus(u,preference){
+        const available=legalBuildings();const focused=available.find(b=>b.id===focusTarget);
+        if(focused&&!preference)return focused;
+        const preferred=available.filter(b=>b.type===preference);
+        return nearest(u,preferred.length?preferred:available)[0];
+      }
+      function renderSquad(){
+        $('squad').innerHTML=state.units.map((u,i)=>`<div class="squad-card" id="unit-${i}"><button class="squad-select" data-unit="${i}" aria-label="Select ${u.name} for deployment"><img src="${portraitURLs[u.id]}" alt=""/><div class="squad-copy"><div class="squad-name">${u.short}</div><div class="squad-state">STANDBY</div><div class="mini-hp"><i style="width:100%"></i></div></div></button><button class="skill-button" data-skill="${i}" aria-label="${u.name}: ${u.skill}. ${u.description}" disabled><span class="skill-progress"></span><b aria-hidden="true">✦</b><span class="skill-label">DEPLOY</span></button></div>`).join('');
+      }
+      $('squad').onclick=event=>{
+        const skill=event.target.closest('[data-skill]');if(skill){activateSkill(Number(skill.dataset.skill));return;}
+        const card=event.target.closest('[data-unit]');if(!card||mode!=='battle')return;
+        selectedUnit=Number(card.dataset.unit);const u=state.units[selectedUnit];
+        message(u.dead?`${u.name.toUpperCase()} · FALLEN`:u.deployed?`${u.skill.toUpperCase()} · ${u.description}`:`DEPLOY ${u.name.toUpperCase()} · TAP THE OUTER EDGE`,4);updateHUD();
+      };
+      function deploy(x,y){
+        if(mode!=='battle')return;
+        const u=state.units[selectedUnit];if(!u||u.deployed)return;
+        if(x>94&&x<706&&y>84&&y<1116){message('PERIMETER ONLY · TAP A GLOWING OUTER EDGE');return;}
+        if(x<=94)x=42;else if(x>=706)x=758;else if(y<=84)y=34;else y=1166;
+        u.x=clamp(x,22,778);u.y=clamp(y,22,1178);u.deployed=true;u.spawnTime=state.time;u.stealthUntil=u.id===9?state.time+6:0;
+        state.started=true;addEffect('ring',u.x,u.y,65,'#a9f4cc',.8);burst(u.x,u.y,'#a9f4cc',12);
+        const next=state.units.findIndex(h=>!h.deployed);if(next!==-1)selectedUnit=next;
+        message(next===-1?'SQUAD DEPLOYED · TAP A STRUCTURE TO FOCUS FIRE':`${u.name.toUpperCase()} DEPLOYED · ${state.units[next].short} NEXT`);updateHUD();
+      }
+      canvas.addEventListener('pointerdown',event=>{
+        if(mode!=='battle')return;event.preventDefault();const box=canvas.getBoundingClientRect();
+        const x=(event.clientX-box.left)*800/box.width,y=(event.clientY-box.top)*1200/box.height;
+        if(x<94||x>706||y<84||y>1116){deploy(x,y);return;}
+        const building=nearest({x,y},state.buildings.filter(b=>b.hp>0)).find(b=>Math.hypot(b.x-x,b.y-y)<b.radius+25);
+        if(building){focusTarget=building.id;message(`FOCUS: ${building.name.toUpperCase()}${building.type==='core'&&coreLocked()?' · CLEAR 20 TOWERS TO UNLOCK':''}`);updateHUD();}
+        else if(!state.units[selectedUnit].deployed)message('DEPLOY ALONG THE GLOWING OUTER EDGE');
+      });
+      canvas.addEventListener('keydown',event=>{
+        if(event.isComposing||event.keyCode===229)return;
+        const moves={ArrowLeft:[-45,0],ArrowRight:[45,0],ArrowUp:[0,-45],ArrowDown:[0,45]};
+        if(moves[event.key]){event.preventDefault();keyboardCursor.visible=true;keyboardCursor.x=clamp(keyboardCursor.x+moves[event.key][0],30,770);keyboardCursor.y=clamp(keyboardCursor.y+moves[event.key][1],30,1170);}
+        if(event.key==='Enter'||event.key===' '){event.preventDefault();deploy(keyboardCursor.x,keyboardCursor.y);}
+      });
+      $('ranges').onclick=()=>{showRanges=!showRanges;updateHUD();};
+      $('pause').onclick=()=>{if(mode==='battle')pauseBattle();};
+      $('restart').onclick=()=>{
+        if(mode!=='battle')return;mode='paused';showModal('RESTART?','The fortress and your strike team will be fully restored.','RESTART BATTLE',startBattle,'CANCEL',resumeBattle);
+      };
+      function showModal(title,copy,primary,action,secondary='RETURN TO ROSTER',secondaryAction=returnToRoster){
+        previousFocus=document.activeElement;modalAction=action;
+        $('modal-title').textContent=title;$('modal-copy').textContent=copy;$('modal-primary').firstElementChild.textContent=primary;
+        $('modal-secondary').textContent=secondary;$('modal-secondary').onclick=secondaryAction;
+        $('overlay').classList.remove('hidden');$('selection').inert=true;$('battle-screen').inert=true;
+        $('modal-primary').focus({preventScroll:true});
+      }
+      function closeModal(){
+        $('overlay').classList.add('hidden');$('selection').inert=false;$('battle-screen').inert=false;
+        $('result-stats').classList.add('hidden');$('modal-symbol').style.color='';$('modal-title').style.color='';
+      }
+      function resumeBattle(){mode='battle';closeModal();lastFrame=performance.now();if(previousFocus&&previousFocus.isConnected)previousFocus.focus({preventScroll:true});}
+      function pauseBattle(){mode='paused';$('modal-eyebrow').textContent='TACTICAL PAUSE';$('modal-symbol').textContent='Ⅱ';showModal('PAUSED','Take a breath. Plan your next move. Combat and cooldowns are frozen.','RESUME BATTLE',resumeBattle);}
+      function returnToRoster(){mode='selection';state=null;closeModal();$('battle-screen').classList.add('hidden');$('selection').classList.remove('hidden');$('launch').focus({preventScroll:true});}
+      $('modal-primary').onclick=()=>{if(modalAction)modalAction();};
+      document.addEventListener('keydown',event=>{
+        if(event.isComposing||event.keyCode===229)return;
+        if(event.key==='Escape'){if(mode==='battle')pauseBattle();else if(mode==='paused')resumeBattle();}
+        if(event.key==='Tab'&&!$('overlay').classList.contains('hidden')){
+          const a=$('modal-primary'),b=$('modal-secondary');if(event.shiftKey&&document.activeElement===a){event.preventDefault();b.focus();}else if(!event.shiftKey&&document.activeElement===b){event.preventDefault();a.focus();}
+        }
+      });
+      document.addEventListener('visibilitychange',()=>{if(document.hidden&&mode==='battle'&&state.started)pauseBattle();});
+      function endBattle(victory){
+        if(mode!=='battle')return;mode='result';
+        $('modal-eyebrow').textContent='OPERATION 001 / DEBRIEF';$('modal-symbol').textContent=victory?'◇':'×';
+        $('modal-symbol').style.color=victory?'#a9f4cc':'#ff706e';$('modal-title').style.color=victory?'#a9f4cc':'#ff706e';
+        $('result-stats').innerHTML=`<div><strong>${clock(state.time)}</strong><span>ELAPSED</span></div><div><strong>${state.kills}/25</strong><span>DESTROYED</span></div><div><strong>${state.units.filter(u=>!u.dead).length}/10</strong><span>SURVIVORS</span></div>`;
+        $('result-stats').classList.remove('hidden');
+        showModal(victory?'VICTORY':'DEFEAT',victory?`SS15 has fallen. ${number(state.totalDamage)} damage dealt. ${state.skills} special abilities unleashed.`:'The strike team has fallen. Try a different deployment or save your disables for overlapping defense zones.','RESTART BATTLE',startBattle);
+        announce(victory?'Victory. SS15 core destroyed.':'Defeat. All ten heroes have fallen.');
+      }
+      function updateHUD(){
+        if(!state)return;const core=state.buildings.find(b=>b.type==='core');
+        $('clock').textContent=clock(state.time);$('core-value').textContent=`${number(core?.hp||0)} / 15,000`;
+        $('core-bar').style.width=`${Math.max(0,(core?.hp||0)/150)}%`;
+        $('remaining').textContent=`HEROES ${state.units.filter(u=>!u.dead).length} / 10`;
+        $('destroyed').textContent=`DESTROYED ${String(state.kills).padStart(2,'0')} / 25`;
+        $('deployed-count').textContent=`${state.units.filter(u=>u.deployed).length} / 10 DEPLOYED`;
+        $('shield-text').textContent=state.shieldOffUntil>state.time?`SHIELD OFF ${Math.ceil(state.shieldOffUntil-state.time)}s`:shieldOn()?`SHIELD ${state.buildings.filter(b=>b.type==='reactor'&&b.hp>0).length}/4`:'SHIELD DOWN';
+        $('ranges').classList.toggle('active',showRanges);$('ranges').setAttribute('aria-pressed',showRanges);
+        state.units.forEach((u,i)=>{
+          const card=$(`unit-${i}`);card.classList.toggle('chosen',i===selectedUnit);card.classList.toggle('fallen',u.dead);
+          card.querySelector('.mini-hp i').style.width=`${u.hp/u.maxHp*100}%`;
+          card.querySelector('.squad-state').textContent=u.dead?'FALLEN':u.deployed?`${number(u.hp)} HP`:'TAP TO DEPLOY';
+          card.querySelector('.squad-select').setAttribute('aria-label',`${u.name}, ${u.dead?'fallen':u.deployed?number(u.hp)+' HP':'ready to deploy'}`);
+          const skill=card.querySelector('.skill-button');skill.disabled=!u.deployed||u.dead||u.skillCd>0||u.chargeUntil>state.time||(u.id===15&&u.used)||mode!=='battle';
+          card.querySelector('.skill-label').textContent=u.dead?'FALLEN':!u.deployed?'DEPLOY':u.chargeUntil>state.time?'CHARGING':u.id===15&&u.used?'USED':u.skillCd>0?`${Math.ceil(u.skillCd)}s`:'SKILL READY';
+          card.querySelector('.skill-progress').style.transform=`scaleX(${clamp(1-u.skillCd/u.skillCooldown,0,1)})`;
+        });
+        const target=state.buildings.find(b=>b.id===focusTarget&&b.hp>0);$('target-info').classList.toggle('hidden',!target);
+        if(target)$('target-info').textContent=`${target.name.toUpperCase()} · LV100 · ${number(target.hp)} HP${target.range?' · RNG '+target.range:''}${target.type==='core'&&coreLocked()?' · INTERLOCKED':''}`;
+        if(state.time>=state.messageUntil){
+          const reserves=state.units.filter(u=>!u.deployed).length,live=state.units.filter(u=>u.deployed&&!u.dead).length;
+          $('field-message').textContent=reserves?(live?'TAP THE PERIMETER TO DEPLOY YOUR NEXT HERO':'DEPLOY YOUR RESERVES · TAP THE OUTER EDGE'):coreLocked()?'CLEAR THE DEFENSE GRID · TAP ✦ TO USE A SKILL':'CORE EXPOSED · FINISH THE BREACH';
+        }
+      }
+
+      function addEffect(kind,x,y,r,color,life=.5,extra={}){if(state.effects.length<75)state.effects.push({kind,x,y,r,color,life,maxLife:life,...extra});}
+      function beam(a,b,color,kind='beam',life=.2){addEffect(kind,a.x,a.y,0,color,life,{tx:b.x,ty:b.y});}
+      function burst(x,y,color,count=14){
+        const limit=reducedMotion?5:count;for(let i=0;i<limit&&state.particles.length<220;i++){const a=Math.random()*TAU,s=20+Math.random()*100;state.particles.push({x,y,vx:Math.cos(a)*s,vy:Math.sin(a)*s,color,life:.3+Math.random()*.7,maxLife:1,size:2+Math.random()*5});}
+      }
+      function floating(x,y,text,color='#efca8e'){if(state.floats.length<45)state.floats.push({x,y,text,color,life:1});}
+      function damageLabel(entity,amount,color){
+        entity.damageText+=amount;
+        if(state.time>=entity.damageTextAt){floating(entity.x,entity.y-32,String(Math.round(entity.damageText)),color);entity.damageText=0;entity.damageTextAt=state.time+.4;}
+      }
+      function damageBuilding(b,amount,trueDamage=false){
+        if(!b||b.hp<=0)return 0;
+        if(b.type==='core'&&coreLocked()){addEffect('ring',b.x,b.y,65,'#88dace',.3);return 0;}
+        let value=amount*(trueDamage?1:shieldMultiplier());value=Math.min(value,b.hp);b.hp=Math.max(0,b.hp-value);state.totalDamage+=value;b.flash=.12;
+        damageLabel(b,value,'#f4d2a0');
+        if(b.hp<=0){
+          state.kills++;b.target=null;b.beam=false;burst(b.x,b.y,b.color,26);addEffect('explosion',b.x,b.y,b.radius*2,b.color,.8);addEffect('smoke',b.x,b.y,b.radius*1.5,'#53616a',2.3);
+          if(b.type==='core')endBattle(true);else if(b.type==='reactor')message('POWER REACTOR DESTROYED · SHIELD GRID WEAKENED');else if(!coreLocked())message('DEFENSE GRID CLEARED · SS15 CORE EXPOSED',5);
+        }
+        return value;
+      }
+      function damageWall(amount,trueDamage=false){
+        if(state.wall.hp<=0)return;const dealt=Math.min(state.wall.hp,amount*(shieldOn()&&!trueDamage?.8:1));state.wall.hp=Math.max(0,state.wall.hp-dealt);state.totalDamage+=dealt;
+        if(state.wall.hp<=0){for(let y=100;y<1150;y+=120){burst(85,y,'#9eeee0',6);burst(715,y,'#9eeee0',6);}message('ENERGY WALL BREACHED · PUSH INTO THE FORTRESS',4);}
+      }
+      function damageHero(u,amount,type,source){
+        if(!u||u.dead||!u.deployed)return;
+        if((u.id===0&&Math.random()<.22)||(u.id===18&&Math.random()<.35)){floating(u.x,u.y-24,'DODGE','#a9f4cc');return;}
+        if(u.id===14&&state.time>=u.infinityAt){u.infinityAt=state.time+8;addEffect('ring',u.x,u.y,34,'#b9a2ec',.45);return;}
+        if(u.id===16&&type==='laser'&&u.buffUntil>state.time)return;
+        if(u.id===22&&type==='missile'&&Math.random()<.25){floating(u.x,u.y-24,'BLOCK','#a9f4cc');return;}
+        let value=amount*(1-u.defense);
+        if(u.id===3&&type==='cannon')value*=.5;
+        if(u.id===11&&source&&distance(u,source)<160)value*=.8;
+        if(u.id===15&&u.hp<u.maxHp*.4)value*=.6;
+        if(u.id===23&&type==='laser')value*=.75;
+        if(u.id===17&&u.buffUntil>state.time)value*=.7;
+        u.hp=Math.max(0,u.hp-value);damageLabel(u,value,'#ff928b');
+        if(u.hp<=0){u.dead=true;u.chargeUntil=0;burst(u.x,u.y,'#dc8986',18);addEffect('ring',u.x,u.y,38,'#f59a90',.5);floating(u.x,u.y,u.short+' DOWN','#ff928b');
+          if(state.units.every(hero=>hero.dead))endBattle(false);
+        }
+      }
+      function areaDamage(x,y,r,amount,color='#e8b88b',trueDamage=false,stun=0){
+        addEffect('ring',x,y,r,color,.7);burst(x,y,color,18);
+        for(const b of [...state.buildings])if(b.hp>0&&Math.hypot(b.x-x,b.y-y)<=r+b.radius){damageBuilding(b,amount,trueDamage);if(stun)b.disabledUntil=Math.max(b.disabledUntil,state.time+stun);}
+      }
+      function shoot(source,target,damage,kind,color,speed=400,extra={}){
+        if(state.projectiles.length>=100)return;
+        state.projectiles.push({x:source.x,y:source.y,target,damage,kind,color,speed,life:9,trailAt:0,source,...extra});
+      }
+      function basicAttack(u,target){
+        u.attackCount++;let power=u.attack;
+        if(u.id===5)power*=1+Math.min(.3,(state.time-u.spawnTime)*.01);
+        if(u.id===17&&u.buffUntil>state.time)power*=1.8;
+        if(u.id===21&&u.hp<u.maxHp*.5)power*=1.5;
+        const piercing=u.id===6||u.id===23;
+        if(target.wall){const point=wallPoint(u);beam(u,point,u.color,'slash');damageWall(power,piercing);burst(point.x,point.y,'#a9e6d1',4);return;}
+        if(u.id===8&&target.type==='gun')power*=1.3;
+        if(u.id===13&&target.type==='laser')power*=1.4;
+        if(u.id===17&&target.type==='cannon')power*=1.35;
+        if(u.id===19&&target.type==='gun')power*=1.4;
+        if(u.id===24&&target.type==='laser')power*=1.45;
+        if(u.id===9&&target.disabledUntil>state.time)power*=1.25;
+        if(u.id===4&&u.attackCount%4===0){power*=1.6;addEffect('ring',u.x+15,u.y,20,'#dabb71',.35);}
+        if(u.range>=140){shoot(u,target,power,'hero',u.color,470,{trueDamage:piercing,owner:u});}
+        else{beam(u,target,u.color,'slash',.22);damageBuilding(target,power,piercing);}
+        if(u.id===2||u.id===10){for(const b of state.buildings)if(b!==target&&b.hp>0&&distance(target,b)<110)damageBuilding(b,power*(u.id===2?.2:.25));}
+        if(u.id===7){const next=nearest(target,legalBuildings().filter(b=>b!==target&&distance(b,target)<210))[0];if(next){beam(target,next,'#c0d3ef','lightning',.25);damageBuilding(next,power*.25);}}
+        if(u.id===20)u.hp=Math.min(u.maxHp,u.hp+power*.2);
+      }
+      function chooseTarget(u){
+        if(wallOn()&&!inBase(u))return {...wallPoint(u),radius:0,wall:true,hp:state.wall.hp};
+        const buildings=legalBuildings(),focused=buildings.find(b=>b.id===focusTarget);
+        if(focused)return focused;
+        const preference=[8,19].includes(u.id)?'gun':[13,24].includes(u.id)?'laser':u.id===17?'cannon':null;
+        return buildings.sort((a,b)=>(distance(u,a)-(a.type===preference?110:0))-(distance(u,b)-(b.type===preference?110:0)))[0];
+      }
+      function moveUnit(u,target,dt){
+        const dx=target.x-u.x,dy=target.y-u.y,d=Math.hypot(dx,dy)||1;let vx=dx/d,vy=dy/d;
+        for(const b of state.buildings){if(b.hp<=0||b===target)continue;const bx=u.x-b.x,by=u.y-b.y,bd=Math.hypot(bx,by)||1,safe=b.radius+(u.buffUntil>state.time&&u.id===17?36:21);
+          if(bd<safe+22){const force=(safe+22-bd)/22;vx+=bx/bd*force;vy+=by/bd*force;if(bd<safe+12){vx+=-by/bd*.9;vy+=bx/bd*.9;}}
+        }
+        for(const other of state.units){if(other===u||other.dead||!other.deployed)continue;const d2=distance(u,other);if(d2<35&&d2>0){vx+=(u.x-other.x)/d2*.5;vy+=(u.y-other.y)/d2*.5;}}
+        const norm=Math.hypot(vx,vy)||1;u.x=clamp(u.x+vx/norm*u.speed*dt,20,780);u.y=clamp(u.y+vy/norm*u.speed*dt,20,1180);
+        for(const b of state.buildings){if(b.hp<=0)continue;const bd=distance(u,b),minimum=b.radius+16;if(bd<minimum){const angle=Math.atan2(u.y-b.y,u.x-b.x);u.x=b.x+Math.cos(angle)*minimum;u.y=b.y+Math.sin(angle)*minimum;}}
+      }
+      function updateUnits(dt){
+        for(const u of state.units){
+          if(!u.deployed||u.dead)continue;u.skillCd=Math.max(0,u.skillCd-dt);u.cooldown=Math.max(0,u.cooldown-dt);
+          const regen=u.id===1?35:u.id===12?80:u.id===16?110:u.id===24?60:0;u.hp=Math.min(u.maxHp,u.hp+regen*dt);
+          if(u.chargeUntil>state.time)continue;
+          const target=chooseTarget(u);u.target=target;if(!target)continue;
+          const range=u.range+(u.id===17&&u.buffUntil>state.time?45:0);
+          if(distance(u,target)>range+(target.radius||0))moveUnit(u,target,dt);
+          else if(u.cooldown<=0){basicAttack(u,target);u.cooldown=u.attackCd/(([12,16].includes(u.id)&&u.buffUntil>state.time)?2:1);}
+        }
+      }
+      function updateTurrets(dt){
+        const alive=state.units.filter(u=>u.deployed&&!u.dead&&u.stealthUntil<=state.time);
+        for(const b of state.buildings){
+          b.flash=Math.max(0,b.flash-dt);b.beam=false;if(b.hp<=0||!b.range)continue;
+          if(b.disabledUntil>state.time){b.target=null;continue;}
+          b.cooldown-=dt;
+          if(!b.target||b.target.dead||b.target.stealthUntil>state.time||distance(b,b.target)>b.range){b.target=nearest(b,alive.filter(u=>distance(b,u)<=b.range))[0]||null;}
+          const target=b.target;if(!target)continue;b.angle=Math.atan2(target.y-b.y,target.x-b.x);
+          if(b.type==='laser'){b.beam=true;damageHero(target,120*dt,'laser',b);continue;}
+          if(b.cooldown>0)continue;b.cooldown=b.rate;b.flash=.18;
+          if(b.type==='cannon')shoot(b,target,350,'cannon',b.color,245);
+          if(b.type==='gun')shoot(b,target,40,'gun',b.color,870);
+          if(b.type==='missile')shoot(b,target,800,'missile',b.color,165);
+          if(b.type==='tesla'){
+            const chain=[target,...nearest(target,alive.filter(u=>u!==target&&distance(target,u)<135)).slice(0,2)];let prev=b;
+            chain.forEach((u,i)=>{beam(prev,u,b.color,'lightning',.35);damageHero(u,600*Math.pow(.65,i),'tesla',b);prev=u;});
+          }
+        }
+      }
+      function updateProjectiles(dt){
+        for(const p of state.projectiles){
+          p.life-=dt;let t=p.target;if(!t||t.hp<=0||t.dead){p.life=0;continue;}
+          if(p.kind==='missile'){
+            const guardian=state.units.find(u=>u.id===22&&u.deployed&&!u.dead&&u.reflectUntil>state.time&&distance(u,p)<185);
+            if(guardian&&p.source.hp>0){p.target=p.source;p.kind='reflected';p.color='#a9f4cc';p.damage=1600;p.speed=380;beam(guardian,p,'#e9d692','lightning',.25);floating(guardian.x,guardian.y-30,'REFLECT','#e9d692');t=p.target;}
+          }
+          const d=distance(p,t),step=p.speed*dt;
+          if(d<step+(t.radius||13)){
+            p.life=0;
+            if(['hero','skill','reflected','rasen'].includes(p.kind)){
+              damageBuilding(t,p.damage,p.trueDamage);burst(t.x,t.y,p.color,5);
+              if(p.kind==='rasen'){areaDamage(t.x,t.y,145,p.damage*.45,p.color);if(state.wall.hp>0)damageWall(3000);}
+            }else{
+              damageHero(t,p.damage,p.kind,p.source);burst(t.x,t.y,p.color,p.kind==='gun'?2:9);
+              if(p.kind==='cannon'){addEffect('explosion',t.x,t.y,44,p.color,.35);for(const u of state.units)if(u!==t&&u.deployed&&!u.dead&&distance(u,t)<60)damageHero(u,p.damage*.35,'cannon',p.source);}
+              if(p.kind==='missile')addEffect('explosion',t.x,t.y,50,p.color,.4);
+            }
+          }else{
+            p.x+=(t.x-p.x)/d*step;p.y+=(t.y-p.y)/d*step;
+            if(['missile','rasen','skill'].includes(p.kind)&&state.time>p.trailAt){p.trailAt=state.time+.06;if(state.particles.length<220)state.particles.push({x:p.x,y:p.y,vx:0,vy:12,color:p.color,life:.35,maxLife:.35,size:4});}
+          }
+        }
+        state.projectiles=state.projectiles.filter(p=>p.life>0);
+      }
+      function schedule(delay,owner,action){state.pending.push({at:state.time+delay,owner,action});}
+      function activateSkill(index){
+        if(mode!=='battle')return false;const u=state.units[index];
+        if(!u||!u.deployed||u.dead||u.skillCd>0||u.chargeUntil>state.time||(u.id===15&&u.used))return false;
+        const t=getFocus(u);if(!t)return false;
+        u.skillCd=u.skillCooldown;state.skills++;message(`${u.name.toUpperCase()} / ${u.skill.toUpperCase()}`,3);addEffect('ring',u.x,u.y,50,u.accent,.6);
+        const targetList=(type,count,range=Infinity)=>nearest(u,legalBuildings().filter(b=>b.type===type&&distance(u,b)<=range)).slice(0,count);
+        const multi=(targets,damage,color,kind='slash')=>{targets.forEach((b,i)=>schedule(i*.12,u,()=>{beam(u,b,color,kind,.4);damageBuilding(b,damage);burst(b.x,b.y,color,10);}));};
+        switch(u.id){
+          case 0:{const b=nearest(u,activeDefenses())[0];if(b){b.disabledUntil=Math.max(b.disabledUntil,state.time+4);beam(u,b,'#e3ece7','web',4);damageBuilding(b,900);}break;}
+          case 1:addEffect('sweep',u.x,u.y,300,'#ef9f91',1);areaDamage(u.x,u.y,300,4000,'#eea296',true);break;
+          case 2:{const list=nearest(u,activeDefenses());const first=list[0]||t;const second=list.find(b=>distance(first,b)>180)||first;[first,second].forEach((b,i)=>{const spot={x:b.x,y:b.y};addEffect('warning',spot.x,spot.y,170,'#e4a078',1+i*.45);schedule(1+i*.45,u,()=>{addEffect('meteor',spot.x,spot.y,170,'#e4a078',.65);areaDamage(spot.x,spot.y,170,4800,'#e4a078');});});break;}
+          case 3:areaDamage(u.x,u.y,300,6200,'#e4d4bb');addEffect('fist',u.x,u.y,150,'#e4d4bb',.8);if(wallOn()&&!inBase(u))damageWall(6200);break;
+          case 4:shoot(u,t,5400,'rasen','#9edbd8',300);addEffect('ring',u.x,u.y,60,'#9edbd8',.4);break;
+          case 5:{u.chargeUntil=state.time+3;addEffect('charge',u.x,u.y,75,'#b6e5e6',3);const spot={x:t.x,y:t.y};schedule(3,u,()=>{u.chargeUntil=0;beam(u,spot,'#b6e5e6','beam',.45);areaDamage(spot.x,spot.y,310,9000,'#b6e5e6');if(wallOn()&&distance(spot,wallPoint(spot))<310)damageWall(9000);});break;}
+          case 6:beam(u,t,'#f4e6b7','slash',.6);addEffect('fist',t.x,t.y,100,'#f4e6b7',.7);damageBuilding(t,t.hp,true);break;
+          case 7:{let prev=u;nearest(u,activeDefenses()).slice(0,6).forEach((b,i)=>{const source={x:prev.x,y:prev.y};schedule(i*.14,u,()=>{beam(source,b,'#c3c6f2','lightning',.6);damageBuilding(b,3800);});prev=b;});break;}
+          case 8:{const targets=targetList('gun',3);if(!targets.length)targets.push(t);for(let i=0;i<3;i++)schedule(i*.2,u,()=>shoot(u,targets[i%targets.length],2200,'skill','#e7b577',370));break;}
+          case 9:u.stealthUntil=state.time+6;for(const b of activeDefenses())if(distance(u,b)<350)b.disabledUntil=Math.max(b.disabledUntil,state.time+6);addEffect('ring',u.x,u.y,350,'#9bb4c5',1);break;
+          case 10:{const dx=t.x-u.x,dy=t.y-u.y,d=Math.hypot(dx,dy)||1;const end={x:u.x+dx/d*1050,y:u.y+dy/d*1050};beam(u,end,'#a2dbe4','wave',.9);for(const b of [...legalBuildings()]){const bx=b.x-u.x,by=b.y-u.y,along=(bx*dx+by*dy)/d,across=Math.abs(bx*dy-by*dx)/d;if(along>=0&&along<=1050&&across<85+b.radius)damageBuilding(b,5800);}if(wallOn()&&!inBase(u))damageWall(5800);break;}
+          case 11:addEffect('crush',t.x,t.y,70,'#bb91c5',1);damageBuilding(t,t.hp*.5,true);break;
+          case 12:u.hp=Math.min(u.maxHp,u.hp+u.maxHp*.5);u.buffUntil=state.time+8;floating(u.x,u.y,'+3,000 HP','#a9f4cc');break;
+          case 13:{const targets=targetList('laser',3);multi(targets.length?targets:[t],5000,'#edb078');break;}
+          case 14:for(const b of activeDefenses())b.disabledUntil=Math.max(b.disabledUntil,state.time+5);addEffect('void',400,600,750,'#b6a6d7',5);break;
+          case 15:{u.used=true;const targets=activeDefenses().sort((a,b)=>b.hp-a.hp).slice(0,Math.ceil(activeDefenses().length/2));targets.forEach(b=>{addEffect('crush',b.x,b.y,70,'#c6a4dc',1);damageBuilding(b,b.hp,true);});addEffect('ring',u.x,u.y,1000,'#c6a4dc',1.5);break;}
+          case 16:u.buffUntil=state.time+9;addEffect('ring',u.x,u.y,65,'#ebd28f',.6);break;
+          case 17:{u.buffUntil=state.time+12;const b=getFocus(u,'cannon');if(b){beam(u,b,'#b7c69c','slash',.6);damageBuilding(b,6000);}break;}
+          case 18:multi(nearest(u,legalBuildings().filter(b=>distance(u,b)<650)).slice(0,5),3500,'#f2d489','lightning');break;
+          case 19:{const targets=targetList('gun',4);multi(targets.length?targets:[t],4800,'#c0d7d6');break;}
+          case 20:state.zones.push({x:u.x,y:u.y,r:260,until:state.time+7,next:state.time,color:'#dc91a7',owner:u});addEffect('ring',u.x,u.y,260,'#dc91a7',.7);break;
+          case 21:damageWall(9000,true);areaDamage(u.x,u.y,285,5200,'#b4ce92',false,3);break;
+          case 22:u.reflectUntil=state.time+10;areaDamage(u.x,u.y,150,2200,'#e8d69e',false,1);break;
+          case 23:state.shieldOffUntil=state.time+8;addEffect('void',400,600,750,'#9da5b4',1);beam(u,t,'#dee6da','wave',.7);damageBuilding(t,3000,true);message('ANTI-MAGIC ACTIVE · SHIELDS & ENERGY WALL OFF FOR 8s',5);break;
+          case 24:{const targets=targetList('laser',4,650);multi(targets.length?targets:[t],4500,'#db91a8','tentacle');break;}
+        }
+        updateHUD();return true;
+      }
+      function update(dt){
+        if(mode!=='battle'||!state)return;
+        if(state.started){
+          state.time+=dt;updateUnits(dt);if(mode!=='battle')return;updateTurrets(dt);if(mode!=='battle')return;updateProjectiles(dt);if(mode!=='battle')return;
+          const due=state.pending.filter(e=>e.at<=state.time);state.pending=state.pending.filter(e=>e.at>state.time);
+          for(const event of due){if(!event.owner.dead)event.action();if(mode!=='battle')return;}
+          for(const z of state.zones)if(z.until>state.time&&state.time>=z.next){z.next+=.5;areaDamage(z.x,z.y,z.r,425,z.color);}
+          state.zones=state.zones.filter(z=>z.until>state.time);
+        }
+        state.effects.forEach(e=>e.life-=dt);state.effects=state.effects.filter(e=>e.life>0);
+        state.particles.forEach(p=>{p.life-=dt;p.x+=p.vx*dt;p.y+=p.vy*dt;p.vx*=.97;p.vy*=.97;});state.particles=state.particles.filter(p=>p.life>0);
+        state.floats.forEach(f=>{f.life-=dt;f.y-=26*dt;});state.floats=state.floats.filter(f=>f.life>0);
+      }
+
+      function buildTerrain(){
+        const c=terrainCtx;c.fillStyle='#0a141e';c.fillRect(0,0,800,1200);
+        for(let x=0;x<=800;x+=40)line(c,x,0,x,1200,'#1b2b3818');for(let y=0;y<=1200;y+=40)line(c,0,y,800,y,'#1b2b3830');
+        polygon(c,[[80,20],[690,20],[774,105],[774,1090],[696,1180],[90,1180],[26,1100],[26,90]],'#182632','#394956');
+        polygon(c,[[100,48],[670,48],[744,120],[744,1070],[680,1155],[112,1155],[55,1080],[55,110]],'#111e29','#43545d');
+        c.fillStyle='#162530';c.fillRect(105,100,590,980);
+        for(let y=110;y<1100;y+=100){for(let x=115;x<700;x+=96){c.fillStyle=(x+y)%3?'#192934':'#172530';c.fillRect(x,y,85,89);c.strokeStyle='#293944';c.lineWidth=1;c.strokeRect(x+4,y+4,77,81);c.fillStyle='#35454e';c.fillRect(x+8,y+8,3,3);c.fillRect(x+74,y+77,3,3);}}
+        c.fillStyle='#0c1821';c.fillRect(372,192,57,870);c.fillRect(100,465,602,52);c.fillRect(100,760,602,47);
+        for(let y=205;y<1050;y+=36){line(c,382,y,382,y+16,'#60777b',2);line(c,418,y,418,y+16,'#60777b',2);}
+        for(const y of [490,785])for(let x=125;x<700;x+=42){line(c,x,y,x+18,y,'#657376',2);}
+        polygon(c,[[260,69],[449,69],[488,121],[461,184],[260,184],[230,120]],'#25343e','#596368');
+        label(c,'COMMAND / SS15',353,176,'#d2a997',12);
+        for(const [x,y] of [[178,716],[607,716],[315,713],[486,713]]){line(c,x,y,x,785,'#567e7933',7);line(c,x,785,400,785,'#567e7933',7);}
+        for(let y=140;y<1100;y+=100){c.fillStyle='#6f8584';c.fillRect(45,y,5,25);c.fillRect(750,y,5,25);}
+        for(const y of [320,655,925]){label(c,`DEFENSE ZONE 0${Math.floor(y/300)}`,400,y,'#526873',10);}
+        for(const [x,y] of [[135,88],[590,88],[135,1100],[590,1100]]){for(let i=0;i<6;i++)line(c,x+i*12,y,x+i*12+7,y+8,'#b49a623e',3);}
+        label(c,'PERIMETER INSERTION',400,1186,'#7caa9d',12);
+      }
+      function hpBar(c,x,y,width,hp,max,color){c.fillStyle='#080e16';c.fillRect(x-width/2-1,y-1,width+2,6);c.fillStyle='#34434b';c.fillRect(x-width/2,y,width,4);c.fillStyle=color;c.fillRect(x-width/2,y,width*Math.max(0,hp/max),4);}
+      function renderBuilding(b){
+        if(b.hp<=0)return;const c=ctx,disabled=b.disabledUntil>state.time;
+        c.save();c.translate(b.x,b.y);
+        c.fillStyle='#050b1199';c.beginPath();c.ellipse(4,b.radius*.65,b.radius+10,b.radius*.48,0,0,TAU);c.fill();
+        const r=b.radius;polygon(c,[[-r,-r*.7],[-r*.65,-r],[r*.65,-r],[r,-r*.7],[r,r*.7],[r*.65,r],[-r*.65,r],[-r,r*.7]],b.flash>0?'#617583':'#33444f','#6b7e84');
+        c.strokeStyle='#142630';c.lineWidth=3;c.strokeRect(-r+7,-r+7,r*2-14,r*2-14);
+        if(b.type==='core'){
+          c.lineWidth=2;circle(c,0,0,35,'#27313d','#cda391');circle(c,0,0,25,'#c4887622','#e1aa92');
+          const gl=c.createRadialGradient(0,0,2,0,0,23);gl.addColorStop(0,'#fff0d8');gl.addColorStop(.25,'#e6b69b');gl.addColorStop(1,'#b8797130');circle(c,0,0,23,gl);
+          c.save();c.rotate(state.time*.35);for(let a=0;a<4;a++){c.rotate(TAU/4);c.fillStyle='#d6b7a4';c.fillRect(29,-5,10,10);}c.restore();
+          if(coreLocked()){circle(c,0,0,58,null,'#8bc9c17a');c.setLineDash([8,9]);circle(c,0,0,62,null,'#a3d2c755');c.setLineDash([]);}
+          label(c,'SS15',0,-67,'#ebc4ae',15);
+        }else if(b.type==='reactor'){
+          c.fillStyle='#112f37';c.fillRect(-19,-20,38,40);const glow=shieldOn()?'#8bd6c7':'#596c71';
+          for(let i=-12;i<16;i+=9){c.fillStyle=glow;c.fillRect(i,-16,5,32);}circle(c,0,0,9,'#152e35',glow);
+        }else if(b.type==='missile'){
+          c.rotate(b.angle-Math.PI/2);c.fillStyle='#202d36';c.fillRect(-24,-23,48,46);
+          for(let x=-16;x<=16;x+=16)for(let y=-14;y<=14;y+=28){c.fillStyle='#667581';c.fillRect(x-5,y-9,10,18);polygon(c,[[x-5,y-9],[x,y-15],[x+5,y-9]],b.color);c.fillStyle='#ba8e64';c.fillRect(x-2,y,4,8);}
+        }else if(b.type==='tesla'){
+          circle(c,0,0,18,'#263849','#8294a8');c.fillStyle='#788593';c.fillRect(-5,-27,10,33);
+          for(let y=-19;y<8;y+=8){c.fillStyle='#9eacc1';c.fillRect(-15,y,30,4);}circle(c,0,-26,8,disabled?'#627184':b.color);
+          if(!disabled)circle(c,0,-26,13+Math.sin(state.time*5)*3,null,'#baa8e344');
+        }else{
+          circle(c,0,0,18,'#4e6270','#748892');c.rotate(b.angle);
+          if(b.type==='cannon'){c.fillStyle='#7d909b';c.fillRect(-8,-11,41,22);c.fillStyle='#34454f';c.fillRect(21,-14,12,28);c.fillStyle='#bbc9c9';c.fillRect(31,-8,6,16);}
+          if(b.type==='gun'){c.fillStyle='#839a9e';c.fillRect(0,-9,33,6);c.fillRect(0,3,33,6);c.fillStyle='#475e63';c.fillRect(-8,-13,17,26);}
+          if(b.type==='laser'){c.fillStyle='#5b6576';c.fillRect(-9,-10,35,20);c.fillStyle=disabled?'#677582':b.color;c.fillRect(23,-6,7,12);circle(c,0,0,9,'#322f40',b.color);}
+          if(b.flash>0){circle(c,37,0,8,'#fff1c3');}
+        }
+        c.restore();
+        if(disabled){circle(c,b.x,b.y,b.radius+10,null,'#bba6dd99');label(c,`${Math.ceil(b.disabledUntil-state.time)}s`,b.x,b.y+5,'#eedcf8',17);}
+        hpBar(c,b.x,b.y-b.radius-12,b.type==='core'?88:58,b.hp,b.maxHp,b.color);
+        if(b.type!=='core')label(c,b.type==='reactor'?'PWR':'L100',b.x,b.y+b.radius+16,'#9badb6',10);
+        if(focusTarget===b.id){c.setLineDash([7,5]);c.lineWidth=2;circle(c,b.x,b.y,b.radius+16,null,'#edf4dc');c.setLineDash([]);}
+      }
+      function renderWall(){
+        if(state.wall.hp<=0)return;const active=wallOn(),c=ctx;
+        c.lineWidth=9;c.strokeStyle=active?'#659c9244':'#4b596236';c.strokeRect(85,75,630,1050);
+        c.lineWidth=2;c.strokeStyle=active?'#9fddd0':'#6b7a8066';c.strokeRect(85,75,630,1050);
+        if(active){c.setLineDash([12,8]);c.lineDashOffset=-state.time*18;c.strokeStyle='#d3efe077';c.strokeRect(79,69,642,1062);c.setLineDash([]);}
+        for(let y=75;y<=1125;y+=75){for(const x of [85,715]){c.fillStyle='#43575d';c.fillRect(x-6,y-6,12,12);c.fillStyle=active?'#ade4d3':'#657579';c.fillRect(x-2,y-3,4,6);}}
+        for(let x=160;x<710;x+=75){for(const y of [75,1125]){c.fillStyle='#43575d';c.fillRect(x-6,y-6,12,12);}}
+        c.fillStyle='#11212af2';c.fillRect(241,1110,318,31);label(c,`WALL RING / ${number(state.wall.hp)}${active?'':' / DISABLED'}`,400,1123,active?'#b1dfcf':'#8b9ca7',12);hpBar(c,400,1130,280,state.wall.hp,state.wall.maxHp,active?'#a3d5c4':'#687c85');
+      }
+      function renderHero(u){
+        if(!u.deployed||u.dead)return;const c=ctx,giant=u.id===17&&u.buffUntil>state.time,size=giant?60:34;
+        c.save();if(u.stealthUntil>state.time)c.globalAlpha=.45;
+        circle(c,u.x,u.y+9,size*.65,'#050c13aa');circle(c,u.x,u.y,size*.57,'#203c36',u.color);
+        c.save();c.beginPath();c.arc(u.x,u.y,size*.5,0,TAU);c.clip();c.imageSmoothingEnabled=false;c.drawImage(portraits[u.id],u.x-size*.5,u.y-size*.55,size,size);c.restore();
+        if(state.units[selectedUnit]===u)circle(c,u.x,u.y,size*.65,null,'#d3f9dc');
+        if(u.reflectUntil>state.time){c.lineWidth=3;circle(c,u.x,u.y,45,null,'#e3d08c');}
+        if(u.buffUntil>state.time){c.setLineDash([5,5]);circle(c,u.x,u.y,size*.7,null,u.accent);c.setLineDash([]);}
+        hpBar(c,u.x,u.y-size*.6-8,42,u.hp,u.maxHp,'#a9edc5');
+        label(c,u.short,u.x,u.y+size*.65+11,'#dfebe3',10);c.restore();
+      }
+      function renderEffect(e){
+        const c=ctx,p=1-e.life/e.maxLife;c.save();c.globalAlpha=Math.min(1,e.life*3);c.strokeStyle=e.color;c.fillStyle=e.color;c.lineWidth=3;
+        if(['ring','explosion','sweep'].includes(e.kind)){
+          const r=e.r*(.15+p*.85);circle(c,e.x,e.y,r,null,e.color);c.globalAlpha*=.12;circle(c,e.x,e.y,r,e.color);
+          if(e.kind==='sweep'){c.globalAlpha=.8;const angle=p*TAU;line(c,e.x,e.y,e.x+Math.cos(angle)*e.r,e.y+Math.sin(angle)*e.r,e.color,5);}
+        }else if(['beam','slash','wave','web','tentacle','lightning'].includes(e.kind)){
+          if(e.kind==='lightning'||e.kind==='tentacle'){
+            c.beginPath();c.moveTo(e.x,e.y);const dx=e.tx-e.x,dy=e.ty-e.y,d=Math.hypot(dx,dy)||1;
+            for(let i=1;i<=8;i++){const jitter=i===8?0:Math.sin(i*7+state.time*38)*17;c.lineTo(e.x+dx*i/8-dy/d*jitter,e.y+dy*i/8+dx/d*jitter);}c.stroke();
+          }else{
+            c.lineWidth=e.kind==='wave'?55:e.kind==='slash'?10:3;c.globalAlpha*=e.kind==='wave'?.4:.8;line(c,e.x,e.y,e.tx,e.ty,e.color,c.lineWidth);
+            if(e.kind==='web'){for(let a=0;a<6;a++){const angle=a*TAU/6;line(c,e.tx,e.ty,e.tx+Math.cos(angle)*40,e.ty+Math.sin(angle)*40,e.color,2);}circle(c,e.tx,e.ty,23,null,e.color);}
+          }
+        }else if(e.kind==='smoke'){c.globalAlpha=e.life/e.maxLife*.35;circle(c,e.x-10*p,e.y-35*p,e.r*(.5+p),e.color);circle(c,e.x+20,e.y-50*p,e.r*.65,e.color);}
+        else if(e.kind==='warning'){c.setLineDash([12,8]);circle(c,e.x,e.y,e.r,null,e.color);line(c,e.x-15,e.y,e.x+15,e.y,e.color,2);line(c,e.x,e.y-15,e.x,e.y+15,e.color,2);}
+        else if(e.kind==='meteor'){line(c,e.x-220*(1-p),e.y-320*(1-p),e.x,e.y,e.color,28);circle(c,e.x,e.y,35*(1-p),e.color);}
+        else if(e.kind==='charge'){circle(c,e.x,e.y-40,12+p*e.r,e.color+'44',e.color);label(c,'SPIRIT BOMB',e.x,e.y-115,e.color,12);}
+        else if(e.kind==='crush'){c.translate(e.x,e.y);c.rotate(p*TAU);c.strokeRect(-e.r*(1-p)/2,-e.r*(1-p)/2,e.r*(1-p),e.r*(1-p));}
+        else if(e.kind==='fist'){c.lineWidth=10;circle(c,e.x,e.y,e.r*(1-p)*.7,null,e.color);for(let i=-1;i<=1;i++)line(c,e.x+i*e.r*.3,e.y-e.r*.4,e.x+i*e.r*.3,e.y+e.r*.2,e.color,12);}
+        else if(e.kind==='void'){c.globalAlpha=.06*(e.life/e.maxLife);c.fillRect(0,0,800,1200);c.globalAlpha=.3*(e.life/e.maxLife);circle(c,e.x,e.y,e.r*(.2+p),null,e.color);}
+        c.restore();
+      }
+      function renderBattle(){
+        if(!state)return;ctx.drawImage(terrain,0,0);
+        const undeployed=state.units.some(u=>!u.deployed);
+        if(undeployed){ctx.fillStyle='#a9f4cc0c';ctx.fillRect(18,20,48,1160);ctx.fillRect(734,20,48,1160);ctx.fillRect(65,20,670,34);ctx.fillRect(65,1146,670,34);ctx.strokeStyle='#98cdb38c';ctx.lineWidth=2;ctx.setLineDash([12,12]);ctx.lineDashOffset=-state.time*14;ctx.strokeRect(29,30,742,1140);ctx.setLineDash([]);}
+        for(const b of state.buildings){if(b.hp<=0||!b.range)continue;
+          if(showRanges||b.id===focusTarget){ctx.lineWidth=1;ctx.setLineDash([5,9]);circle(ctx,b.x,b.y,b.range,null,b.id===focusTarget?b.color+'88':b.color+'18');ctx.setLineDash([]);}
+        }
+        renderWall();
+        for(const z of state.zones){ctx.lineWidth=3;circle(ctx,z.x,z.y,z.r,'#dc91a711','#dc91a760');label(ctx,'MALEVOLENT SHRINE',z.x,z.y-40,'#e0a5b6',14);}
+        for(const b of state.buildings)renderBuilding(b);
+        for(const b of state.buildings)if(b.hp>0&&b.beam&&b.target&&!b.target.dead){line(ctx,b.x,b.y,b.target.x,b.target.y,b.color+'33',9);line(ctx,b.x,b.y,b.target.x,b.target.y,b.color,2);circle(ctx,b.target.x,b.target.y,6,b.color);}
+        for(const u of state.units)renderHero(u);
+        for(const p of state.projectiles){const r=p.kind==='gun'?2:p.kind==='cannon'?7:p.kind==='rasen'?13:5;circle(ctx,p.x,p.y,r+3,p.color+'33');circle(ctx,p.x,p.y,r,p.color);if(p.kind==='rasen'){line(ctx,p.x-18,p.y,p.x+18,p.y,p.color,3);line(ctx,p.x,p.y-18,p.x,p.y+18,p.color,3);}}
+        state.effects.forEach(renderEffect);
+        for(const p of state.particles){ctx.globalAlpha=clamp(p.life/p.maxLife,0,1);ctx.fillStyle=p.color;ctx.fillRect(p.x,p.y,p.size,p.size);}ctx.globalAlpha=1;
+        for(const f of state.floats){ctx.globalAlpha=Math.min(1,f.life*2);ctx.font='bold 17px "Courier New", monospace';ctx.textAlign='center';ctx.lineWidth=3;ctx.strokeStyle='#09121b';ctx.strokeText(f.text,f.x,f.y);ctx.fillStyle=f.color;ctx.fillText(f.text,f.x,f.y);}ctx.globalAlpha=1;
+        if(keyboardCursor.visible){circle(ctx,keyboardCursor.x,keyboardCursor.y,20,null,'#edffdc');line(ctx,keyboardCursor.x-25,keyboardCursor.y,keyboardCursor.x+25,keyboardCursor.y,'#edffdc');}
+      }
+      function drawMission(){
+        const c=$('mission-art').getContext('2d');c.scale(2,2);
+        const g=c.createLinearGradient(240,0,450,170);g.addColorStop(0,'#17263000');g.addColorStop(1,'#2c434466');c.fillStyle=g;c.fillRect(0,0,450,167);
+        for(let i=0;i<14;i++){line(c,250+i*22,0,130+i*22,167,'#a3cebf09');line(c,230,i*18,450,i*18,'#a3cebf09');}
+        c.save();c.translate(360,83);c.rotate(-.55);c.scale(.87,.6);
+        polygon(c,[[-64,-80],[38,-80],[65,-45],[105,-28],[114,58],[51,49],[29,91],[-39,91],[-68,51],[-118,60],[-109,-23],[-69,-43]],'#223a3f','#709385');
+        polygon(c,[[-51,-61],[30,-61],[42,-26],[41,57],[-39,61],[-56,19]],'#324e4e','#9ab7a3');
+        for(const x of [-87,70]){polygon(c,[[x,-8],[x+18,-8],[x+18,42],[x,48]],'#31484b','#607c76');for(let y=-1;y<34;y+=12)line(c,x+3,y,x+14,y,'#a8c7ad',3);}
+        for(const [x,y] of [[-34,-35],[23,-35],[-36,34],[25,34]]){circle(c,x,y,11,'#1b3439','#a0b8a3');line(c,x,y,x,y-22,'#8eaba0',5);}
+        circle(c,-6,-5,22,'#55786c','#b1d7ad');circle(c,-6,-5,11,'#acc6a2');
+        line(c,-7,25,-7,63,'#c2d6ac',3);polygon(c,[[-23,88],[-8,116],[8,88]],'#a9dfbc22','#9aba9d66');
+        c.restore();c.setLineDash([3,5]);line(c,280,25,436,25,'#a6c7ae55');line(c,433,25,433,132,'#a6c7ae55');c.setLineDash([]);circle(c,434,25,3,'#a9f4cc');
+        const fade=c.createLinearGradient(170,0,290,0);fade.addColorStop(0,'#172630');fade.addColorStop(1,'#17263000');c.fillStyle=fade;c.fillRect(170,0,125,167);
+      }
+      drawMission();
+      function frame(now){
+        const dt=Math.min((now-lastFrame)/1000,.05)||0;lastFrame=now;
+        if(mode==='battle'){update(dt);renderBattle();uiAccumulator+=dt;if(uiAccumulator>.12){updateHUD();uiAccumulator=0;}}
+        requestAnimationFrame(frame);
+      }
+      requestAnimationFrame(frame);
+    </script>
+  </body>
+</html>
